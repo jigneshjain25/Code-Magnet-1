@@ -7,8 +7,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
@@ -30,6 +32,8 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 public class Main{
 	
+	String userName=null;
+	File userFile;
 	//the output JTextArea
 	
 	//  for eclipse 
@@ -51,7 +55,6 @@ public class Main{
 	JMenuBar menuBar=new JMenuBar();
 	JMenu optionMenu=new JMenu("Options");
 	JMenuItem qUp=new JMenuItem("Upload Question");
-	JMenuItem aUp=new JMenuItem("Upload Answer");
 	JMenuItem submit=new JMenuItem("Submit");
 	
 	JFrame frame=new JFrame("Code Magnet");
@@ -84,11 +87,12 @@ public class Main{
 		}
 	});
 	
-	boolean f1=false,f2=false;
+
 	
 	public static void main(String[] args){
 		new Main().go();
 	}
+	
 	void go(){
 
 		try {
@@ -103,7 +107,8 @@ public class Main{
 		    try {
 		        UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 		    } catch (Exception ex) {
-		        // not worth my time
+		        System.out.println("Error setting the look and feel");
+		        ex.printStackTrace();
 		    }
 		}
     	
@@ -133,10 +138,9 @@ public class Main{
 				fileOpen.setDialogTitle("Upload Question");
 				fileOpen.showOpenDialog(frame);
 				File file=fileOpen.getSelectedFile();
-               
+				if(file==null)return;
                 try{
-                	String s=file.getPath();
-                	BufferedReader br=new BufferedReader(new FileReader(s));
+                   	BufferedReader br=new BufferedReader(new FileReader(file));
                 	String l;
                 	int count=0;
             
@@ -159,75 +163,66 @@ public class Main{
                    		      area[count].append(l+"\n");
                     }
                 	
+                	for(int i=0;i<maxLabels;i++)area[i].setText(area[i].getText().trim());
+                    for(int i=0;i<maxLabels;i++)area[i].append("\n");
                 	qUp.setEnabled(false);
-                	
-                	f1=true;
-                   	if(f1 && f2)	//indicates both question and answer have been uploaded
-                	{
-                   		panel.setVisible(false);
-                   		output.setVisible(false);    
-                   		JOptionPane.showConfirmDialog(frame, "Go Techno", "Code Magnet", -1);         		
-                   		timer.start();
-                   		output.setVisible(true);
-                   		panel.setVisible(true);
+                	submit.setEnabled(true);
 
-                	}
+                   	//panel.setVisible(false);
+                   	//output.setVisible(false); 
+                   	lUpScroller.setVisible(false);
+                   	lDownScroller.setVisible(false);
                    	
+                   	
+                   	while(userName==null || userName=="")
+                   		userName=(String)JOptionPane.showInputDialog(frame, "Enter you full Name", "Code Magnet", JOptionPane.INFORMATION_MESSAGE, null, null, null);
+            
+                   	if(right.getSyntaxEditingStyle()==SyntaxConstants.SYNTAX_STYLE_JAVA)
+						userFile = new File(userName+".java");
+					else 
+						userFile = new File(userName+".cpp");
+                   
+                   	timer.start();
+                   	//output.setVisible(true);
+                   	//panel.setVisible(true);
+                   	lUpScroller.setVisible(true);
+                   	lDownScroller.setVisible(true);
                 }catch(Exception ee){
+                	System.out.println("Error uploading the question");
                 	ee.printStackTrace();
                 }
-                for(int i=0;i<maxLabels;i++)area[i].setText(area[i].getText().trim());
-                for(int i=0;i<maxLabels;i++)area[i].append("\n");
-				
-				
-			}
-		});
-		
-		aUp.addActionListener(new ActionListener() {
-			
-			
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser fileOpen=new JFileChooser();
-				fileOpen.setDialogTitle("Upload Answer");
-				fileOpen.showOpenDialog(frame);
-				File file=fileOpen.getSelectedFile();
-                try{
-                    String s=file.getPath();
-                    BufferedReader br=new BufferedReader(new FileReader(s));
-                	String l;
-                	while((l=br.readLine())!=null)
-                	 		answer+=l;
-                    answer=answer.replaceAll("\\s","");
-                	submit.setEnabled(true);
-                	aUp.setEnabled(false);
-                	
-                	f2=true;
-                   	if(f1 && f2)	//indicates both question and answer have been uploaded
-                	{
-                   		panel.setVisible(false);
-                   		output.setVisible(false);    
-                   		JOptionPane.showConfirmDialog(frame, "Go Techno", "Code Magnet", -1);         		
-                   		timer.start();
-                   		output.setVisible(true);
-                   		panel.setVisible(true);
-                	}
-                   	
-                }catch(Exception ee){ee.printStackTrace();}
-				
-			}
+            }
 		});
 		
 		submit.addActionListener(new ActionListener() {
 			
+			@SuppressWarnings("deprecation")
 			public void actionPerformed(ActionEvent e) {
+				String msg="You Can Submit only once, no changes are allowed after submitting and the timer shall stop.\n" +
+						"Do you wish to continue ?";
+				int n=JOptionPane.showConfirmDialog(frame, msg, "Code Magnet", JOptionPane.YES_NO_OPTION,JOptionPane.INFORMATION_MESSAGE);
+				if(n==JOptionPane.NO_OPTION)return;
+				try{
+					
+					BufferedWriter bw = new BufferedWriter(new FileWriter(userFile));
+					bw.write(right.getText());
+					bw.close();
+				}
+				catch (Exception e1) {
+					System.out.println("Error Saving the file");
+					e1.printStackTrace();
+				}
+				timer.stop();
+				lUpScroller.setVisible(false);
+               	lDownScroller.setVisible(false);
+				submit.setEnabled(false);
+				rscroller.setVisible(false);
 				
-					if(answer.equals(right.getText().replaceAll("\\s","")))
-					{
-						timer.stop();
-						JOptionPane.showMessageDialog(frame,"Correct!\n Please call the organiser","Code Magnet",JOptionPane.INFORMATION_MESSAGE);
-					}
-					else
-						JOptionPane.showMessageDialog(frame,"inCorrect!\nTry Again","Code Magnet",JOptionPane.INFORMATION_MESSAGE);
+				String msg2="You have successfully submitted the solution!\n" +
+						"You took "+time+" s.\n" +
+						"Do not close this window and inform the organiser.";
+				JOptionPane.showMessageDialog(frame, msg, "Code Magnet", JOptionPane.INFORMATION_MESSAGE, null);
+				
 			}
 		});
 		
@@ -256,14 +251,12 @@ public class Main{
 		}
 		
 		optionMenu.add(qUp);
-		optionMenu.add(aUp);
 		optionMenu.add(submit);
 		menuBar.add(optionMenu);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(860, 700);
-		frame.setLocation(50, 0);
+		frame.setLocation(50, 5);
 		frame.setJMenuBar(menuBar);
-		//frame.setResizable(false);
 		mainPanel.add(lUpScroller);
 		mainPanel.add(lDownScroller);
 		frame.getContentPane().add(BorderLayout.WEST,mainPanel);
