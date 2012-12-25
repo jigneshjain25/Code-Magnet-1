@@ -1,24 +1,17 @@
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 
 import javax.swing.BoxLayout;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -27,8 +20,6 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.text.DefaultCaret;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 public class Main{
 	
@@ -36,12 +27,13 @@ public class Main{
 	File userFile;
 	//the output JTextArea
 	
-	//  for eclipse 
-	 	JTextArea output=new JTextArea(230,5);
+	//  for java 6
+	// JTextArea output=new JTextArea(230,5);
 	
-	//for jar file
-	//JTextArea output=new JTextArea(20,5);
+	//for java 7
+	JTextArea output=new JTextArea(35,5);
 	 
+	
 	int maxLabels=50;
 	//String made from file selected by Upload answer , with all spaces removed
 	String answer="";
@@ -69,32 +61,19 @@ public class Main{
 	JScrollPane lUpScroller = new JScrollPane(output);
 	JScrollPane lDownScroller = new JScrollPane(panel);
 	
-	RSyntaxTextArea right=new RSyntaxTextArea(5,45);
+	RSTA right=new RSTA(5,45);
 	RTextScrollPane rscroller = new RTextScrollPane(right);
 	
 	int time=0;
-	Thread timer=new Thread(new Runnable(){
-		public void run(){
-			while(true){
-				time++;
-				frame.setTitle("Code Magnet "+time);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	});
-	
-
+	Thread timer=new Thread(new timerJob(this));
 	
 	public static void main(String[] args){
 		new Main().go();
 	}
 	
 	void go(){
-
+		System.out.println(System.getProperty("user.dir"));
+		System.out.println(new File(".").getAbsolutePath());
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 		        if ("Nimbus".equals(info.getName())) {
@@ -112,6 +91,9 @@ public class Main{
 		    }
 		}
     	
+		DefaultCaret caret1 = (DefaultCaret)output.getCaret();
+		caret1.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+		
 		lDownScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
     	lDownScroller.getVerticalScrollBar().setUnitIncrement(36);
     	
@@ -130,101 +112,20 @@ public class Main{
 		rscroller.getVerticalScrollBar().setUnitIncrement(16);
 		submit.setEnabled(false);
 		
-		qUp.addActionListener(new ActionListener() {
-			
-			public void actionPerformed(ActionEvent e) {
-				
-				JFileChooser fileOpen=new JFileChooser();
-				fileOpen.setDialogTitle("Upload Question");
-				fileOpen.showOpenDialog(frame);
-				File file=fileOpen.getSelectedFile();
-				if(file==null)return;
-                try{
-                   	BufferedReader br=new BufferedReader(new FileReader(file));
-                	String l;
-                	int count=0;
-            
-                	l=br.readLine().trim();
-                	if(l.equals("0"))
-                		right.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
-                	else
-                		right.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-                	
-                	while(!((l=(br.readLine())).trim().equals("end")))
-                   		output.append(l+"\n");
-                   	output.setText(output.getText().trim());
-               	
-                	while((l=br.readLine())!=null){
-                			
-                   		    l=l.trim();
-                			if(l.equals("end"))
-                   		    	count++;
-                   		    else
-                   		      area[count].append(l+"\n");
-                    }
-                	
-                	for(int i=0;i<maxLabels;i++)area[i].setText(area[i].getText().trim());
-                    for(int i=0;i<maxLabels;i++)area[i].append("\n");
-                	qUp.setEnabled(false);
-                	submit.setEnabled(true);
-
-                   	//panel.setVisible(false);
-                   	//output.setVisible(false); 
-                   	lUpScroller.setVisible(false);
-                   	lDownScroller.setVisible(false);
-                   	
-                   	
-                   	while(userName==null || userName=="")
-                   		userName=(String)JOptionPane.showInputDialog(frame, "Enter you full Name", "Code Magnet", JOptionPane.INFORMATION_MESSAGE, null, null, null);
-            
-                   	if(right.getSyntaxEditingStyle()==SyntaxConstants.SYNTAX_STYLE_JAVA)
-						userFile = new File(userName+".java");
-					else 
-						userFile = new File(userName+".cpp");
-                   
-                   	timer.start();
-                   	//output.setVisible(true);
-                   	//panel.setVisible(true);
-                   	lUpScroller.setVisible(true);
-                   	lDownScroller.setVisible(true);
-                }catch(Exception ee){
-                	System.out.println("Error uploading the question");
-                	ee.printStackTrace();
-                }
-            }
+		//diable typing - allow only enter and backspace
+		right.addKeyListener(new KeyAdapter() {
+			public void keyTyped(KeyEvent e1){
+				char c=e1.getKeyChar();
+				if ( (c != KeyEvent.VK_BACK_SPACE) && (c != KeyEvent.VK_ENTER) ) 
+			         e1.consume();  // ignore event
+			}			
 		});
+		//KeyStroke remove = KeyStroke.getKeyStroke(KeyEvent.VK_V,ActionEvent.CTRL_MASK);
+		//InputMap im = right.getInputMap();
+		//im.put(remove, "none");
 		
-		submit.addActionListener(new ActionListener() {
-			
-			@SuppressWarnings("deprecation")
-			public void actionPerformed(ActionEvent e) {
-				String msg="You Can Submit only once, no changes are allowed after submitting and the timer shall stop.\n" +
-						"Do you wish to continue ?";
-				int n=JOptionPane.showConfirmDialog(frame, msg, "Code Magnet", JOptionPane.YES_NO_OPTION,JOptionPane.INFORMATION_MESSAGE);
-				if(n==JOptionPane.NO_OPTION)return;
-				try{
-					
-					BufferedWriter bw = new BufferedWriter(new FileWriter(userFile));
-					bw.write(right.getText());
-					bw.close();
-				}
-				catch (Exception e1) {
-					System.out.println("Error Saving the file");
-					e1.printStackTrace();
-				}
-				timer.stop();
-				lUpScroller.setVisible(false);
-               	lDownScroller.setVisible(false);
-				submit.setEnabled(false);
-				rscroller.setVisible(false);
-				
-				String msg2="You have successfully submitted the solution!\n" +
-						"You took "+time+" s.\n" +
-						"Do not close this window and inform the organiser.";
-				JOptionPane.showMessageDialog(frame, msg, "Code Magnet", JOptionPane.INFORMATION_MESSAGE, null);
-				
-			}
-		});
+		qUp.addActionListener(new qUpListener(this));
+		submit.addActionListener(new submitListener(this));
 		
 		for(int i=0;i<maxLabels;i++){
 			
@@ -254,7 +155,7 @@ public class Main{
 		optionMenu.add(submit);
 		menuBar.add(optionMenu);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setSize(860, 700);
+		frame.setSize(885, 700);
 		frame.setLocation(50, 5);
 		frame.setJMenuBar(menuBar);
 		mainPanel.add(lUpScroller);
@@ -262,6 +163,7 @@ public class Main{
 		frame.getContentPane().add(BorderLayout.WEST,mainPanel);
 		frame.getContentPane().add(BorderLayout.EAST,rscroller);
 		frame.setVisible(true);
+		frame.setResizable(false);
 		
 	}
 }
