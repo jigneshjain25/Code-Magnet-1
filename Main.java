@@ -33,17 +33,8 @@ public class Main{
 	//for java 7
 	JTextArea output=new JTextArea(35,5);
 	 
-	
 	int maxLabels=50;
-	//String made from file selected by Upload answer , with all spaces removed
-	String answer="";
 	
-	/**
-	 * 	Options
-	 * 	----Upload Question
-	 *  ----Upload Answer
-	 *  ----Submit
-	 */
 	JMenuBar menuBar=new JMenuBar();
 	JMenu optionMenu=new JMenu("Options");
 	JMenuItem qUp=new JMenuItem("Upload Question");
@@ -61,6 +52,7 @@ public class Main{
 	JScrollPane lUpScroller = new JScrollPane(output);
 	JScrollPane lDownScroller = new JScrollPane(panel);
 	
+	//RSTA right=new RSTA(5,45);
 	RSTA right=new RSTA(5,45);
 	RTextScrollPane rscroller = new RTextScrollPane(right);
 	
@@ -72,8 +64,7 @@ public class Main{
 	}
 	
 	void go(){
-		System.out.println(System.getProperty("user.dir"));
-		System.out.println(new File(".").getAbsolutePath());
+		System.out.println("Working Directory: "+System.getProperty("user.dir"));
 		try {
 		    for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
 		        if ("Nimbus".equals(info.getName())) {
@@ -101,13 +92,16 @@ public class Main{
     	
 		output.setEditable(false);
     	output.setDragEnabled(false);
-    	output.setFont(new Font("Courier New",Font.BOLD,16));
+    	//output.setFont(new Font("Courier New",Font.BOLD,16));
+    	output.setFont(new Font("Monospaced",Font.BOLD,14));
     	
 		mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.Y_AXIS));
 		
 		right.setAnimateBracketMatching(true);
 		right.setAutoIndentEnabled(true);
-		right.setFont(new Font("Courier New",Font.PLAIN,15));
+		//right.setFont(new Font("Courier New",Font.PLAIN,15));
+		right.setFont(new Font("Monospaced",Font.PLAIN,15));
+		right.setCloseCurlyBraces(false);
 		
 		rscroller.getVerticalScrollBar().setUnitIncrement(16);
 		submit.setEnabled(false);
@@ -129,10 +123,12 @@ public class Main{
 		
 		for(int i=0;i<maxLabels;i++){
 			
+			//area[i]=new JTextArea(3,50);
 			area[i]=new JTextArea(3,50);
 			DefaultCaret caret = (DefaultCaret)area[i].getCaret();
 			caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-			area[i].setFont(new Font("Courier New",Font.PLAIN,14));
+			//area[i].setFont(new Font("Courier New",Font.PLAIN,14));
+			area[i].setFont(new Font("Monospaced",Font.PLAIN,14));
 			area[i].setEditable(false);
 			area[i].setTransferHandler(new TransferHandler("text"));
 			area[i].setDropTarget(null);
@@ -154,7 +150,7 @@ public class Main{
 		optionMenu.add(qUp);
 		optionMenu.add(submit);
 		menuBar.add(optionMenu);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.setSize(885, 700);
 		frame.setLocation(50, 5);
 		frame.setJMenuBar(menuBar);
@@ -162,6 +158,7 @@ public class Main{
 		mainPanel.add(lDownScroller);
 		frame.getContentPane().add(BorderLayout.WEST,mainPanel);
 		frame.getContentPane().add(BorderLayout.EAST,rscroller);
+		frame.addWindowListener(new myWindowListener(this));
 		frame.setVisible(true);
 		frame.setResizable(false);
 		

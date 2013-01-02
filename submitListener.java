@@ -21,6 +21,8 @@ public class submitListener implements ActionListener{
 			
 			BufferedWriter bw = new BufferedWriter(new FileWriter(obj.userFile));
 			bw.write(obj.right.getText());
+			bw.write("\n");
+			bw.write("//Made using CodeMagnet");
 			bw.close();
 		}
 		catch (Exception e1) {

@@ -54,10 +54,10 @@ public class qUpListener implements ActionListener{
 
         	obj.lUpScroller.setVisible(false);
         	obj.lDownScroller.setVisible(false);
-           	
-           	while(obj.userName==null || obj.userName=="")
+          
+           	while(obj.userName==null || obj.userName.trim().isEmpty())
            		obj.userName=(String)JOptionPane.showInputDialog(obj.frame, "Enter you full Name", "Code Magnet", JOptionPane.INFORMATION_MESSAGE, null, null, null);
-    
+           	  	
            	obj.userName=obj.userName.replaceAll("\\s", "_");
            	
            	if(obj.right.getSyntaxEditingStyle()==SyntaxConstants.SYNTAX_STYLE_JAVA)
